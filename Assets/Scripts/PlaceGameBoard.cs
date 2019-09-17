@@ -7,12 +7,16 @@ using UnityEngine.XR.ARSubsystems;
 
 public class PlaceGameBoard : MonoBehaviour
 {
-
+    // Public variables can be set from the unity UI.
+    // We will set this to our Game Board object.
     public GameObject gameBoard;
+    // These will store references to our other components.
     private ARRaycastManager raycastManager;
     private ARPlaneManager planeManager;
+    // This will indicate whether the game board is set.
     private bool placed = false;
 
+    // Start is called before the first frame update.
     void Start()
     {
         // GetComponent allows us to reference other parts of this game object.
@@ -20,11 +24,12 @@ public class PlaceGameBoard : MonoBehaviour
         planeManager = GetComponent<ARPlaneManager>();
     }
 
+    // Update is called once per frame.
     void Update()
     {
         if (!placed)
         {
-            if (Input.touchCount > 0)
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
             {
                 Vector2 touchPosition = Input.GetTouch(0).position;
 
@@ -44,7 +49,6 @@ public class PlaceGameBoard : MonoBehaviour
                     placed = true;
                     // After we have placed the game board we will disable the
                     // planes in the scene as we no longer need them.
-                    // planeManager.SetTrackablesActive(false);
                     SetTrackablesActive(false);
 
                 }
@@ -54,7 +58,6 @@ public class PlaceGameBoard : MonoBehaviour
         {
             // The plane manager will set newly detected planes to active by 
             // default so we will continue to disable these.
-            // planeManager.SetTrackablesActive(false);
             SetTrackablesActive(false);
         }
     }
@@ -71,8 +74,10 @@ public class PlaceGameBoard : MonoBehaviour
     // would like to allow the user to move the game board to a new location.
     public void AllowMoveGameBoard()
     {
+        
+        Debug.Log("MOVE BOARD AGAIN");
         placed = false;
-        // planeManager.SetTrackablesActive(true);
+        gameBoard.SetActive(false);
         SetTrackablesActive(true);
     }
 
@@ -82,5 +87,4 @@ public class PlaceGameBoard : MonoBehaviour
     {
         return placed;
     }
-
 }
