@@ -34,6 +34,7 @@ public class Reveal : MonoBehaviour, OnTouch3D
 
     public void OnTouch()
     {
+        Debug.Log("Touched!");
         // If a touch is found and we are not waiting,
         if (remainingDebounceTime <= 0)
         {
