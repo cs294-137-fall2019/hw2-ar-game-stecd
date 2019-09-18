@@ -5,18 +5,14 @@ using UnityEngine;
 
 public class Reveal : MonoBehaviour, OnTouch3D
 {
-// Debouncing is a term from Electrical Engineering referring to 
-    // preventing multiple presses of a button due to the physical switch
-    // inside the button "bouncing".
-    // In CS we use it to mean any action to prevent repeated input. 
-    // Here we will simply wait a specified time before letting the button
-    // be pressed again.
-    // We set this to a public variable so you can easily adjust this in the
-    // Unity UI.
     public float debounceTime = 0.3f;
     public Animator anim;
-    // Stores a counter for the current remaining wait time.
     private float remainingDebounceTime;
+    public GameObject Ctrl;
+    private GameObject currCube;
+    private GameObject prevCube;
+    private bool queued;
+    List<GameObject> queuedGO = new List<GameObject>();
 
     void Start()
     {
@@ -25,20 +21,55 @@ public class Reveal : MonoBehaviour, OnTouch3D
 
     void Update()
     {
-        // Time.deltaTime stores the time since the last update.
-        // So all we need to do here is subtract this from the remaining
-        // time at each update.
         if (remainingDebounceTime > 0)
             remainingDebounceTime -= Time.deltaTime;
+        
+        if (queued && anim.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f) {
+            foreach (var go in queuedGO) {
+                go.SetActive(false);
+            }
+            queued = false;
+        }
+    }
+
+    private IEnumerator WaitForAnimation( Animation animation )
+    {
+        do {
+            yield return null;
+        } while ( animation.isPlaying );
     }
 
     public void OnTouch()
     {
-        Debug.Log("Touched!");
-        // If a touch is found and we are not waiting,
-        if (remainingDebounceTime <= 0)
-        {
-            anim.Play("rotateCube");
+        prevCube = Ctrl.GetComponent<GameMechanics>().prevCube;
+        currCube = this.gameObject;
+
+        if (remainingDebounceTime <= 0) {
+            if (!prevCube) {
+                Debug.Log('1');
+                Ctrl.GetComponent<GameMechanics>().setPrevCube(currCube);
+                anim.Play("rotateUp");
+            }
+            else if (prevCube == currCube) {
+                Debug.Log('2');
+                // do nothing
+            }
+            else if (prevCube.name == currCube.name) {
+                Debug.Log('3');
+                anim.Play("rotateUp");
+                queuedGO.Add(prevCube);
+                queuedGO.Add(currCube);
+                Ctrl.GetComponent<GameMechanics>().setPrevCube(null);
+                Ctrl.GetComponent<GameMechanics>().foundMatch();
+                queued = true;
+            }
+            else {
+                Debug.Log('4');
+                anim.Play("rotateCube",  -1, 0f);
+                prevCube.GetComponent<Animator>().Play("rotateDown", -1, 0f);
+                Ctrl.GetComponent<GameMechanics>().setPrevCube(null);
+
+            }
             remainingDebounceTime = debounceTime;
         }
     }
